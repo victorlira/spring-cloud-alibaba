@@ -55,6 +55,9 @@
         <module>ai-example/spring-cloud-ai-rag-example</module>
         <module>ai-example/spring-cloud-ai-chat-msg-context-example</module>
         <module>spring-cloud-scheduling-example</module>
+        <module>admin-example/admin-prometheus-provider-example</module>
+        <module>admin-example/admin-prometheus-consumer-example</module>
+        <module>admin-example/admin-message-common</module>
     </modules>
 
 

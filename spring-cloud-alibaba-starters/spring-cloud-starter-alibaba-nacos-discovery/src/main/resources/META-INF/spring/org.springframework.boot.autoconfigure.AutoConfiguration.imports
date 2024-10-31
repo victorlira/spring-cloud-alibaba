@@ -8,3 +8,4 @@ com.alibaba.cloud.nacos.discovery.configclient.NacosConfigServerAutoConfiguratio
 com.alibaba.cloud.nacos.loadbalancer.LoadBalancerNacosAutoConfiguration
 com.alibaba.cloud.nacos.NacosServiceAutoConfiguration
 com.alibaba.cloud.nacos.util.UtilIPv6AutoConfiguration
+com.alibaba.cloud.nacos.metrics.NacosMetricsAutoConfiguration

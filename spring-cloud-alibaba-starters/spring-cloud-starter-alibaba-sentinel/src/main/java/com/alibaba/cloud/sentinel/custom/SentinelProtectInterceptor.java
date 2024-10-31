@@ -29,7 +29,12 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -42,10 +47,15 @@ import org.springframework.web.client.RestTemplate;
  * @author <a href="mailto:fangjian0423@gmail.com">Jim</a>
  */
 public class SentinelProtectInterceptor implements ClientHttpRequestInterceptor {
+	private static final Logger log = LoggerFactory
+			.getLogger(SentinelProtectInterceptor.class);
 
 	private final SentinelRestTemplate sentinelRestTemplate;
 
 	private final RestTemplate restTemplate;
+
+	@Autowired
+	private PrometheusMeterRegistry prometheusMeterRegistry;
 
 	public SentinelProtectInterceptor(SentinelRestTemplate sentinelRestTemplate,
 			RestTemplate restTemplate) {
@@ -122,6 +132,9 @@ public class SentinelProtectInterceptor implements ClientHttpRequestInterceptor 
 		if (isDegradeFailure(ex)) {
 			Method fallbackMethod = extractFallbackMethod(sentinelRestTemplate.fallback(),
 					sentinelRestTemplate.fallbackClass());
+			Counter counter = Counter.builder("spring.cloud.alibaba.sentinel.degrade.sum")
+					.register(prometheusMeterRegistry);
+			counter.increment();
 			if (fallbackMethod != null) {
 				return (ClientHttpResponse) methodInvoke(fallbackMethod, args);
 			}
@@ -133,6 +146,9 @@ public class SentinelProtectInterceptor implements ClientHttpRequestInterceptor 
 		Method blockHandler = extractBlockHandlerMethod(
 				sentinelRestTemplate.blockHandler(),
 				sentinelRestTemplate.blockHandlerClass());
+		Counter counter = Counter.builder("spring.cloud.alibaba.sentinel.flow.sum")
+				.register(prometheusMeterRegistry);
+		counter.increment();
 		if (blockHandler != null) {
 			return (ClientHttpResponse) methodInvoke(blockHandler, args);
 		}

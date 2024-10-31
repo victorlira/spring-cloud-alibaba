@@ -21,14 +21,18 @@ import com.alibaba.cloud.stream.binder.rocketmq.autoconfigurate.ExtendedBindingH
 import com.alibaba.cloud.stream.binder.rocketmq.autoconfigurate.RocketMQBinderAutoConfiguration;
 import com.alibaba.cloud.stream.binder.rocketmq.constant.RocketMQConst;
 import com.alibaba.cloud.stream.binder.rocketmq.properties.RocketMQConsumerProperties;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import jakarta.annotation.Resource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.core.MessageProducer;
 
@@ -94,5 +98,10 @@ public class RocketMQMessageChannelBinderTest {
 			RocketMQBinderAutoConfiguration.class})
 	public static class TestConfig {
 
+		@Bean
+		@ConditionalOnMissingBean
+		PrometheusMeterRegistry prometheusMeterRegistry() {
+			return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+		}
 	}
 }

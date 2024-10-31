@@ -21,11 +21,16 @@ import com.alibaba.cloud.stream.binder.rocketmq.actuator.RocketMQBinderHealthInd
 import com.alibaba.cloud.stream.binder.rocketmq.properties.RocketMQBinderConfigurationProperties;
 import com.alibaba.cloud.stream.binder.rocketmq.properties.RocketMQExtendedBindingProperties;
 import com.alibaba.cloud.stream.binder.rocketmq.provisioning.RocketMQTopicProvisioner;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,9 +60,21 @@ public class RocketMQBinderAutoConfiguration {
 
 	@Bean
 	public RocketMQMessageChannelBinder rocketMQMessageChannelBinder(
-			RocketMQTopicProvisioner provisioningProvider) {
+			RocketMQTopicProvisioner provisioningProvider, PrometheusMeterRegistry meterRegistry) {
 		return new RocketMQMessageChannelBinder(rocketBinderConfigurationProperties,
-				extendedBindingProperties, provisioningProvider);
+				extendedBindingProperties, provisioningProvider, meterRegistry);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	InitializingBean forcePrometheusPostProcessor(BeanPostProcessor meterRegistryPostProcessor, PrometheusMeterRegistry registry) {
+		return () -> meterRegistryPostProcessor.postProcessAfterInitialization(registry, "");
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public PrometheusMeterRegistry prometheusMeterRegistry() {
+		return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 	}
 
 	@Configuration(proxyBeanMethods = false)

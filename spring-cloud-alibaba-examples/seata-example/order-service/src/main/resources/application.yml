@@ -51,3 +51,12 @@ seata:
       server-addr: 127.0.0.1:8848
       username: 'nacos'
       password: 'nacos'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

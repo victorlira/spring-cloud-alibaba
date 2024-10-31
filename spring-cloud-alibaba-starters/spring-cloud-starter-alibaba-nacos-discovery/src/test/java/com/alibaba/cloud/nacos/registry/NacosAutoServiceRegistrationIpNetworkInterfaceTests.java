@@ -26,6 +26,8 @@ import java.util.Properties;
 import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientConfiguration;
 import com.alibaba.nacos.api.NacosFactory;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -34,9 +36,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationConfiguration;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -121,6 +125,11 @@ public class NacosAutoServiceRegistrationIpNetworkInterfaceTests {
 			NacosDiscoveryClientConfiguration.class,
 			NacosServiceRegistryAutoConfiguration.class })
 	public static class TestConfig {
+		@Bean
+		@ConditionalOnMissingBean
+		PrometheusMeterRegistry prometheusMeterRegistry() {
+			return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+		}
 
 		static boolean hasValidNetworkInterface = false;
 		static String netWorkInterfaceName;

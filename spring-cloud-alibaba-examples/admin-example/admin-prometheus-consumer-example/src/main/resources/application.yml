@@ -1,0 +1,49 @@
+management:
+  endpoint:
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+server:
+  port: 18083
+spring:
+  application:
+    name: service-consumer
+  cloud:
+    loadbalancer:
+      nacos:
+        enabled: true
+      ribbon:
+        enabled: false
+    nacos:
+      discovery:
+        fail-fast: true
+        server-addr: 127.0.0.1:8848
+      password: nacos
+      username: nacos
+    refresh:
+      enabled: false
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+      eager: true
+    stream:
+      function:
+        definition: consumer;
+      rocketmq:
+        binder:
+          name-server: localhost:9876
+        bindings:
+          consumer-in-0:
+            consumer:
+              messageModel: BROADCASTING
+      bindings:
+        consumer-in-0:
+          destination: broadcast
+          group: broadcast-consumer

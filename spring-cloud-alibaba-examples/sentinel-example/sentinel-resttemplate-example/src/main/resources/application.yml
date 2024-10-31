@@ -39,3 +39,12 @@ spring:
 #          file: "classpath: flowrule.json"
 #          ruleType: "flow"
 #          dataType: "json"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

@@ -16,6 +16,9 @@
 
 package com.alibaba.cloud.seata.web;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.seata.common.util.StringUtils;
 import io.seata.core.context.RootContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
@@ -34,7 +38,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * And clean up Seata information after servlet method invocation in
  * {@link org.springframework.web.servlet.HandlerInterceptor#afterCompletion(HttpServletRequest, HttpServletResponse, Object, Exception)}
  */
+
 public class SeataHandlerInterceptor implements HandlerInterceptor {
+	@Autowired
+	private PrometheusMeterRegistry prometheusMeterRegistry;
+
+	private Counter transSumCounter;
+
+	private Timer.Sample trancsTimerSample;
 
 	private static final Logger log = LoggerFactory
 			.getLogger(SeataHandlerInterceptor.class);
@@ -42,6 +53,9 @@ public class SeataHandlerInterceptor implements HandlerInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) {
+		transSumCounter = Counter.builder("spring-cloud.seata.transaction.counter")
+				.description("Spring Cloud Alibaba Seata global transaction sum.")
+				.register(prometheusMeterRegistry);
 		String xid = RootContext.getXID();
 		String rpcXid = request.getHeader(RootContext.KEY_XID);
 		if (log.isDebugEnabled()) {
@@ -54,13 +68,16 @@ public class SeataHandlerInterceptor implements HandlerInterceptor {
 				log.debug("bind {} to RootContext", rpcXid);
 			}
 		}
-
+		transSumCounter.increment();
+		trancsTimerSample = Timer.start(prometheusMeterRegistry);
 		return true;
 	}
 
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception e) {
+		trancsTimerSample.stop(prometheusMeterRegistry.timer("spring-cloud.seata.transaction.time"));
+
 		if (StringUtils.isNotBlank(RootContext.getXID())) {
 			String rpcXid = request.getHeader(RootContext.KEY_XID);
 
